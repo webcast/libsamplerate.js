@@ -1,34 +1,31 @@
 EMCC:=emcc
-EMCC_OPTS:=-s LINKABLE=1
+CFLAGS:=-O1 -s ASM_JS=1 -s LINKABLE=1 -s USE_TYPED_ARRAYS=2
 EMCONFIGURE:=emconfigure
 EMMAKE:=emmake
-LAME_URL:="http://downloads.sourceforge.net/project/lame/lame/3.99/lame-3.99.5.tar.gz"
+MAD_URL:="ftp://ftp.mars.org/pub/mpeg/libmad-0.15.1b.tar.gz"
 TAR:=tar
 
-LAME_VERSION:=3.99.5
-LAME:=lame-$(LAME_VERSION)
+MAD_VERSION:=0.15.1b
+MAD:=libmad-$(MAD_VERSION)
 
-all: dist/libmp3lame.js dist/libmp3lame.min.js
+all: dist/libmad.js
 
-dist/libmp3lame.js: $(LAME) pre.js post.js
-	$(EMCC) $(EMCC_OPTS) --pre-js pre.js --post-js post.js $(wildcard $(LAME)/libmp3lame/*.o) -o $@
+dist/libmad.js: $(MAD) pre.js post.js
+	$(EMCC) $(CFLAGS) --pre-js pre.js --post-js post.js $(wildcard $(MAD)/*.o) -o $@
 
-dist/libmp3lame.min.js: dist/libmp3lame.js
-	closure-compiler $< --js_output_file $@
-
-$(LAME): $(LAME).tar.gz
+$(MAD): $(MAD).tar.gz
 	$(TAR) xzvf $@.tar.gz && \
 	cd $@ && \
-	$(EMCONFIGURE) ./configure --disable-frontend && \
+	$(EMCONFIGURE) ./configure --enable-fpm=no && \
 	$(EMMAKE) make
 
-$(LAME).tar.gz:
-	test -e "$@" || wget $(LAME_URL)
+$(MAD).tar.gz:
+	test -e "$@" || wget $(MAD_URL)
 
 clean:
-	$(RM) -rf $(LAME)
+	$(RM) -rf $(MAD)
 
 distclean: clean
-	$(RM) $(LAME).tar.gz
+	$(RM) $(MAD).tar.gz
 
 .PHONY: clean distclean

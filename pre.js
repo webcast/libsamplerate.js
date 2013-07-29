@@ -1,4 +1,7 @@
-// libmp3lame.js - port of libmp3lame to JavaScript using emscripten
-// by Andreas Krennmair <ak@synflood.at>
+// libmad.js - port of libmp3lame to JavaScript using emscripten
+// by Romain Beauxis <toots@rastageeks.org>
 
-var Lame = (function() {
+var Mad = (function() {
+  var Module;
+  var context = {};
+  return (function() {
