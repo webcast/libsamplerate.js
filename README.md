@@ -1,9 +1,7 @@
-README for libmad.js
+Libmad.js
 ========================
 
-In order to build libmad.js, make sure you have emscripten installed.
-Then simply run "make", and the build process will download the lame
-source file, extract it, and build the JavaScript version of libmad.
+This repository provides a build of the mad MP3 decoding library in JavaScript.
 
 Decoding API
 ------------
