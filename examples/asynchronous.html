@@ -10,12 +10,11 @@
 
   var AudioContext = window.AudioContext || window.webkitAudioContext;
 
-  AudioContext.prototype.createMadSource = function (file, chans) {
+  AudioContext.prototype.createMadSource = function (chans) {
     var node = this.createScriptProcessor(buflen, chans, chans);
     var source = this.createOscillator();
     source.connect(node);
     source.start(0);
-    worker.postMessage({type: "file", arg: file});
   
     node.onaudioprocess = function (e) {
       var buf = pending.shift();
@@ -33,17 +32,18 @@
       return format;
     };
 
-    worker.postMessage({type: "start"});
-  
     return node;
   };
+
+  var audioContext = new AudioContext;
+  var source = audioContext.createMadSource(chans);
+  source.connect(audioContext.destination);
   
   function init() {
     document.getElementById("play").onclick = function () {
       var file = document.getElementById("file").files[0];
-      var audioContext = new AudioContext;
-      var source = audioContext.createMadSource(file, 2);
-      source.connect(audioContext.destination);
+      worker.postMessage({type: "file", arg: file});
+      worker.postMessage({type: "start"});
     }
   };
   

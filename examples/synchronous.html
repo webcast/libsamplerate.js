@@ -1,11 +1,11 @@
 <script src="libmad.js"></script>
 <script>
+  var file;
+  var chans = 2;
+
   var AudioContext = window.AudioContext || window.webkitAudioContext;
 
-  AudioContext.prototype.createMadSource = function (file, chans, loop) {
-    if (loop == null) {
-      loop = true;
-    }
+  AudioContext.prototype.createMadSource = function (chans) {
     var mad;
     var audioContext = this;
     var format;
@@ -15,7 +15,6 @@
         mad = dec;
       });
     };
-    createDecoder();
   
     var concat = function(a, b) {
       if (typeof b === "undefined") {
@@ -48,10 +47,7 @@
       }
       mad.decodeFrame(function (data, err) {
         if (err) {
-          if (loop) {
-            createDecoder();
-          }
-          return;
+          return createDecoder();
         };
   
         var chan;
@@ -80,16 +76,22 @@
     node.getCurrentFormat = function () {
       return format;
     };
+
+    node.start = function () {
+      createDecoder();
+    }
   
     return node;
   };
+
+  var audioContext = new AudioContext;
+  var source = audioContext.createMadSource(chans);
+  source.connect(audioContext.destination);
   
   function init() {
     document.getElementById("play").onclick = function () {
-      var file = document.getElementById("file").files[0];
-      var audioContext = new AudioContext;
-      var source = audioContext.createMadSource(file, 2);
-      source.connect(audioContext.destination);
+      file = document.getElementById("file").files[0];
+      source.start();
     }
   };
   
