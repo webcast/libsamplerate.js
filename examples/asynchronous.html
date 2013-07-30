@@ -1,0 +1,53 @@
+<script>
+  var chans = 2;
+  var buflen = 4096;
+  var worker = new Worker("worker.js");
+  var pending = [];
+
+  worker.onmessage = function (e) {
+    pending.push(e.data);
+  };
+
+  var AudioContext = window.AudioContext || window.webkitAudioContext;
+
+  AudioContext.prototype.createMadSource = function (file, chans) {
+    var node = this.createScriptProcessor(buflen, chans, chans);
+    var source = this.createOscillator();
+    source.connect(node);
+    source.start(0);
+    worker.postMessage({type: "file", arg: file});
+  
+    node.onaudioprocess = function (e) {
+      var buf = pending.shift();
+      if (!buf) {
+        return;
+      }
+
+      var chan;
+      for (chan=0;chan<chans;chan++) {
+        e.outputBuffer.getChannelData(chan).set(buf[chan]);
+      }
+    };
+  
+    node.getCurrentFormat = function () {
+      return format;
+    };
+
+    worker.postMessage({type: "start"});
+  
+    return node;
+  };
+  
+  function init() {
+    document.getElementById("play").onclick = function () {
+      var file = document.getElementById("file").files[0];
+      var audioContext = new AudioContext;
+      var source = audioContext.createMadSource(file, 2);
+      source.connect(audioContext.destination);
+    }
+  };
+  
+  window.addEventListener("load", init, false);
+</script>
+<input type="file" id="file" accept="audio/mpeg"><br>
+<button id="play">Play</button>
