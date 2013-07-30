@@ -134,12 +134,14 @@ int mad_js_decode_frame(madfile_t *mf)
   return 0;
 }
 
-float **mad_js_pack_frame(madfile_t *mf, int *chans, int *samples) {
+float **mad_js_pack_frame(madfile_t *mf, int *chans, int *samples, int *samplerate, int *bitrate) {
   int i, c;
   float **ret;
 
   *chans = MAD_NCHANNELS(&mf->frame.header);
   *samples = mf->synth.pcm.length;
+  *samplerate = mf->synth.pcm.samplerate;
+  *bitrate = mf->frame.header.bitrate;
   ret = malloc(*chans);
 
   for (c = 0; c < *chans; c++) {

@@ -4,6 +4,11 @@ mergeInto(LibraryManager.library, {
   },
   _mad_js_read: function (mf, buf, position, len, rem) {
     var file = Mad.getDecoder(mf)._file;
+
+    if (position+len>file.size) {
+      return Mad.getDecoder(mf)._decode_callback("End of File");
+    }
+
     var data = Module.HEAPU8.subarray(buf, buf+len);
 
     var reader = new FileReader();
