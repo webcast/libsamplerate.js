@@ -17,7 +17,7 @@ createMadDecoder(file, function (decoder) {
     // This function returns invalid values if no frame
     // has been decoded.
     var format = decoder.getCurrentFormat(); 
-    console.log("Got a frame"!);
+    console.log("Got a frame!");
     console.log("Frame samplerate: " + format.sampleRate);
     console.log("Frame channels: " + format.channels);
     console.log("Frame bitrate" " + format.bitRate);
