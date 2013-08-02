@@ -1,40 +1,35 @@
-Libmad.js
+Libsamplerate.js
 ========================
 
-This repository provides a build of the mad MP3 decoding library in JavaScript.
+This repository provides a build of the samplerate conversion library in JavaScript.
 
-Decoding API
+Conversion API
 ------------
 
 ```
-createMadDecoder(file, function (decoder) {
-  decoder.decodeFrame(function (data, err) {
-    if (err) {
-      return decoder.close();
-    }
-    
-    // Format can theorically change in each frame.
-    // This function returns invalid values if no frame
-    // has been decoded.
-    var format = decoder.getCurrentFormat(); 
-    console.log("Got a frame!");
-    console.log("Frame samplerate: " + format.sampleRate);
-    console.log("Frame channels: " + format.channels);
-    console.log("Frame bitrate" " + format.bitRate);
-    
-    console.log("Now processing data");
-    // data is an array of Float32Arrays..
-  });
+var resampler = new Samplerate({type: Samplerate.FASTEST});
+
+var result = resampler.process({
+  data: buffer, // buffer is a Float32Aray or a Int16Array
+  ratio: 1.5,
+  last: false
 });
+
+var converted = result.data; // same type as buffer above
+var used = result.used; // input samples effectively used
+
+// Optional:
+converter.setRatio(2.3);
+converter.reset();
+
+// Close:
+resampler.close();
 ```
 
 Does it work?
 -------------
 
-Certainly so! Check the `examples/` directory for two implementations using the Web Audio API. 
-
-Those examples have been tested and are working in Chrome. Firefox still needs to finish implementing the Web Audio API for it to
-work, though.. Also, beware of [this webkit bug](https://bugs.webkit.org/show_bug.cgi?id=112521) when implementing your own stuff..
+Certainly so! Check the [savonet/webcast](https://github.com/savonet/webcast) for a working implementation.
 
 Author
 ------
@@ -47,4 +42,4 @@ Andreas Krennmair <ak@synflood.at>
 License
 -------
 
-libmad.js is published under the license terms as mad.
+libsamplerate.js is published under the license terms as samplerate.

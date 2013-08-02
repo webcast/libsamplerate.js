@@ -1,138 +1,157 @@
-// libmad function wrappers
+// libsamplerate function wrappers
+
+var isNode = typeof process === "object" && typeof require === "function";
 
 var float32Len = Module.HEAPF32.BYTES_PER_ELEMENT;
-var ptrLen   = Module.HEAP32.BYTES_PER_ELEMENT;
+var int32Len = Module.HEAP32.BYTES_PER_ELEMENT;
+var int16Len = Module.HEAP16.BYTES_PER_ELEMENT;
+var int8Len = Module.HEAP8.BYTES_PER_ELEMENT;
 
-var decoders = {};
+function Samplerate(args) {
+  var type = args.type || Samplerate.LINEAR;
+  var _err = _malloc(int16Len);
+  var err;
 
-Mad = function (opts) {
- this._file = opts.file;
- this._mad = _mad_js_init();
- this._processing = false;
- this._pending = [];
- this._channels = _malloc(1);
- this._samples = _malloc(1);
- this._samplerate = _malloc(2);
- this._bitrate = _malloc(2);
-
- decoders[this._mad] = this;
-
- return this;
-};
-
-Mad.getDecoder = function (ptr) {
-  return decoders[ptr]; 
-};
-
-Mad.prototype.getCurrentFormat = function () {
-  if (!this._mad) {
-    throw "closed";
-  }
-
-  return {
-    channels: getValue(this._channels, "i8"),
-    sampleRate: getValue(this._samplerate, "i32"),
-    bitRate: getValue(this._bitrate, "i32")
-  }
-};
-
-Mad.prototype.close = function () {
-  if (!this._mad) {
-    throw "closed";
-  }
-
-  _mad_js_close(this._mad);
-  _free(this._channels);
-  _free(this._samples);
-  _free(this._samplerate);
-  _free(this._bitrate);
-
-  this._mad = decoders[this._mad] = null;
-  this._processing = false;
-  this._pending = [];
-  return;
-};
-
-Mad.prototype.decodeFrame = function(callback) {
-  if (!this._mad) {
-    return callback(null, "closed");
-  }
-
-  var mad = this;
-  var _mad = this._mad;
-
-  if (this._processing) {
-    this._pending.push(function () {
-      mad.decodeFrame(callback);
-    });
+  this._src = _src_new(type, 1, err);
+  if (this._src === 0) {
+    err = getValue(_err, "i16");
+    _free(_err);
+    this._onError(err);
     return;
   }
 
-  this._processing = true;
+  _free(_err);
 
-  var fill = function () {
-    _mad_js_fill_buffer(_mad);
-  };
+  this._written = _malloc(int32Len);
+  this._used = _malloc(int32Len);
 
-  this._decode_callback = function (err) {
-    if (err) {
-      mad.close();
-      return callback(null, err);
-    }
-
-    if (_mad_js_decode_frame(_mad) === 1) {
-      return fill();
-    }
-
-    var _data = _mad_js_pack_frame(_mad, mad._channels, mad._samples, mad._samplerate, mad._bitrate);
-
-    var chans = getValue(mad._channels, "i8");
-    var samples = getValue(mad._samples, "i16");
-
-    var data = new Array(chans);
-    var ptr, chanData, chan;
-    for (chan = 0; chan<chans; chan++) {
-      ptr = getValue(_data+chan*ptrLen, "*");
-      chanData = Module.HEAPF32.subarray(ptr/float32Len, ptr/float32Len+samples);
-      data[chan] = new Float32Array(samples);
-      data[chan].set(chanData);
-      _free(ptr);
-    }
-    _free(_data);
-
-    callback(data);
-
-    this._processing = false;
-    var pending = this._pending.shift();
-    if (pending == null) {
-      return;
-    }
-    return pending();
-  };
-
-  return fill();
-}
-
-var createMadDecoder = function (file, callback) {
- var header = _malloc(10);
- var headerData = Module.HEAPU8.subarray(header, header+10);
- var reader = new FileReader();
- reader.onload = function(e) {
-    headerData.set(new Uint8Array(e.target.result));
-
-    var id3Len = _mad_js_id3_len(header);
-    _free(header);
-
-    if (id3Len > 0) {
-      file = file.slice(10+id3Len);
-    }
-
-    var mad = new Mad({file: file});
-    return callback(mad);
- }
- reader.readAsArrayBuffer(file.slice(0, 10));
+  return this;
 };
 
-return createMadDecoder;
+Samplerate.BEST_QUALITY = 0;
+Samplerate.MEDIUM_QUALITY = 1;
+Samplerate.FASTEST = 2;
+Samplerate.ZERO_ORDER_HOLD = 3;
+Samplerate.LINEAR = 4;
+
+Samplerate.prototype._onError = function (e) {
+  throw _src_strerror(e);
+};
+
+Samplerate.prototype.close = function () {
+  if (!this._src) {
+    throw "closed";
+  }
+
+  _free(this._written);
+  _free(this._used);
+  _src_delete(this._src);
+  this._src = this._written = this._used = null;
+  return;
+};
+
+Samplerate.prototype.reset = function () {
+  if (!this._src) {
+    throw "closed";
+  }
+
+  _src_reset(this._src);
+  return;
+};
+
+Samplerate.prototype.setRatio = function (ratio) {
+  if (!this._src) {
+    throw "closed";
+  }
+
+  var err = _src_set_ratio(this._src, ratio);
+  if (err !== 0) {
+    this._onError(err);
+    return;
+  } 
+
+  return;
+};
+
+function convertInt16(buf) {
+  var samples = buf.length;
+  var ret = new Float32(samples);
+
+  var i;
+
+  for (i=0;i<samples;i++) {
+    ret[i] = parseFloat(buf[i]) / 32767.0;
+  }
+  return ret;
+}
+
+function convertFloat32(buf) {
+  var samples = buf.length;
+  var ret = new Int16Array(samples);
+
+  var i;
+  for (i=0;i<samples;i++) {
+    ret[i] = parseInt(buf[i] * 32767);
+  }
+  return ret;
+}
+
+Samplerate.prototype.process = function (args) {
+  var data = args.data;
+  var ratio = args.ratio;
+  var last = args.last || false;
+
+  if (data instanceof Int16Array) {
+    data = convertInt16(data);
+  }
+
+  var inputSamples = data.length;
+  var outputSamples = Math.ceil(inputSamples*ratio);
+  
+  var _input  = _malloc(inputSamples*float32Len);
+  var _output = _malloc(outputSamples*float32Len);
+
+  var input = Module.HEAPF32.subarray(_input/float32Len, _input/float32Len+inputSamples);
+  var output = Module.HEAPF32.subarray(_output/float32Len, _output/float32Len+outputSamples);
+
+  input.set(data);
+
+  last = last ? 1 : 0;
+  var err = _src_js_process(this._src, 
+                            _input, inputSamples,
+                            _output, outputSamples,
+                            ratio, last, 
+                            this._used,
+                            this._written); 
+
+  _free(_input);
+  if (err) {
+    _free(_output);
+    this._onError(err);
+    return;
+  }
+
+  var written = getValue(this._written, "i32");
+  var result = new Float32Array(written);
+  result.set(output.subarray(0, written));
+
+  _free(_output);
+
+  if (data instanceof Int16Array) {
+    result = convertFloat32(result);
+  }
+
+  var ret = {
+    data: result,
+    used: getValue(this._used, "i32")
+  };
+  return ret;
+};
+
+if (isNode) {
+  module.exports = Samplerate;
+}
+
+return Samplerate;
 
 }).call(context)})();

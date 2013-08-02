@@ -1,1 +1,0 @@
-../dist/libmad.js

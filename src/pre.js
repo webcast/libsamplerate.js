@@ -1,7 +1,7 @@
-// libmad.js - port of libmp3lame to JavaScript using emscripten
+// libsamplerate.js - port of libmp3lame to JavaScript using emscripten
 // by Romain Beauxis <toots@rastageeks.org>
 
-createMadDecoder = (function() {
+Samplerate = (function() {
   var Module;
   var context = {};
   return (function() {
