@@ -73,6 +73,10 @@ Samplerate.prototype.setRatio = function (ratio) {
   return;
 };
 
+function clip(x) {
+  return (x > 1 ? 1 : (x < -1 ? -1 : x));
+}
+
 function convertInt16(buf) {
   var samples = buf.length;
   var ret = new Float32(samples);
@@ -80,7 +84,7 @@ function convertInt16(buf) {
   var i;
 
   for (i=0;i<samples;i++) {
-    ret[i] = parseFloat(buf[i]) / 32767.0;
+    ret[i] = clip(parseFloat(buf[i]) / 32767.0);
   }
   return ret;
 }
@@ -91,7 +95,7 @@ function convertFloat32(buf) {
 
   var i;
   for (i=0;i<samples;i++) {
-    ret[i] = parseInt(buf[i] * 32767);
+    ret[i] = parseInt(clip(buf[i]) * 32767);
   }
   return ret;
 }
