@@ -3,7 +3,7 @@ SAMPLERATE:=libsamplerate-$(SAMPLERATE_VERSION)
 
 EMCC:=emcc
 EXPORTED_FUNCTIONS:='["_src_strerror", "_src_new", "_src_delete", "_src_js_process", "_src_reset", "_src_set_ratio"]'
-CFLAGS:=-I$(SAMPLERATE)/src -O2 -fno-unroll-loops -s ASM_JS=1 -s USE_TYPED_ARRAYS=2
+CFLAGS:=-I$(SAMPLERATE)/src -O2 -s ASM_JS=1 -s USE_TYPED_ARRAYS=2
 LINKFLAGS:=$(CFLAGS) -s EXPORTED_FUNCTIONS=$(EXPORTED_FUNCTIONS)
 EMCONFIGURE:=emconfigure
 EMMAKE:=emmake
