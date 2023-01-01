@@ -9,7 +9,7 @@
     "test": "ts-node ./convert.ts"
   },
   "dependencies": {
-    "@toots/libsamplerate.js": "link:../..",
+    "@toots/libsamplerate.js": "file:../..",
     "@types/node": "^18.11.18",
     "@types/wav": "^1.0.1",
     "prettier": "^2.8.1",
