@@ -3,7 +3,7 @@ SAMPLERATE:=libsamplerate-$(SAMPLERATE_VERSION)
 
 EMCC:=emcc
 EXPORTED_FUNCTIONS:='["_malloc", "_free", "_src_strerror", "_src_new", "_src_delete", "_src_js_process", "_src_reset", "_src_is_valid_ratio"]'
-CFLAGS:=-I$(SAMPLERATE)/src -O3
+CFLAGS:=-I$(SAMPLERATE)/include -O3
 LINKFLAGS:=-s EXPORTED_FUNCTIONS=$(EXPORTED_FUNCTIONS) -s SINGLE_FILE=1 -s EXPORTED_RUNTIME_METHODS=setValue,getValue --memory-init-file 0 $(CFLAGS)
 WEB_LINKFLAGS:=$(LINKFLAGS) -s ENVIRONMENT='web' -s EXPORT_NAME='createModule' -s USE_ES6_IMPORT_META=0
 EMCONFIGURE:=emconfigure
