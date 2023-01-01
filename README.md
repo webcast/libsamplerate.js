@@ -1,7 +1,7 @@
 Libsamplerate.js
 ========================
 
-This repository provides a build of the samplerate conversion library in JavaScript.
+This repository provides a build of the samplerate conversion library in JavaScript/wasm.
 
 Install
 -------
