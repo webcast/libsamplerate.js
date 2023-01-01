@@ -20,6 +20,6 @@ jobs:
       run: make
     - name: Run node test
       run: |
-        cd js/test/node
+        cd test/node
         npm install
         npm run test
