@@ -1,37 +1,49 @@
-SAMPLERATE_VERSION:=0.1.8
+SAMPLERATE_VERSION:=0.2.2
 SAMPLERATE:=libsamplerate-$(SAMPLERATE_VERSION)
 
 EMCC:=emcc
-EXPORTED_FUNCTIONS:='["_src_strerror", "_src_new", "_src_delete", "_src_js_process", "_src_reset", "_src_set_ratio"]'
-CFLAGS:=-I$(SAMPLERATE)/src -O2 -s ASM_JS=1 -s USE_TYPED_ARRAYS=2
-LINKFLAGS:=$(CFLAGS) -s EXPORTED_FUNCTIONS=$(EXPORTED_FUNCTIONS)
+EXPORTED_FUNCTIONS:='["_malloc", "_free", "_src_strerror", "_src_new", "_src_delete", "_src_js_process", "_src_reset", "_src_is_valid_ratio"]'
+CFLAGS:=-I$(SAMPLERATE)/src -O3
+LINKFLAGS:=-s EXPORTED_FUNCTIONS=$(EXPORTED_FUNCTIONS) -s SINGLE_FILE=1 -s EXPORTED_RUNTIME_METHODS=setValue,getValue --memory-init-file 0 $(CFLAGS)
+WEB_LINKFLAGS:=$(LINKFLAGS) -s ENVIRONMENT='web' -s EXPORT_NAME='createModule' -s USE_ES6_IMPORT_META=0
 EMCONFIGURE:=emconfigure
 EMMAKE:=emmake
-SAMPLERATE_URL:="http://www.mega-nerd.com/SRC/libsamplerate-0.1.8.tar.gz"
+SAMPLERATE_BASEDIR:=libsamplerate-$(SAMPLERATE_VERSION)
+SAMPLERATE_TARBALL:=$(SAMPLERATE_BASEDIR).tar.xz
+SAMPLERATE_URL:="https://github.com/libsndfile/libsamplerate/releases/download/$(SAMPLERATE_VERSION)/$(SAMPLERATE_TARBALL)"
 TAR:=tar
 
-all: dist/libsamplerate.js
+all: dist/libsamplerate_node.js dist/libsamplerate_browser.js
 
-dist/libsamplerate.js: $(SAMPLERATE) src/wrapper.o src/pre.js src/post.js
-	$(EMCC) $(LINKFLAGS) --pre-js src/pre.js --post-js src/post.js $(wildcard $(SAMPLERATE)/src/*.o) src/wrapper.o -o $@
+src/post-node.js: src/class.js src/node-wrapper.js
+	rm -f src/post-node.js
+	cat src/class.js src/node-wrapper.js > src/post-node.js
 
-$(SAMPLERATE): $(SAMPLERATE).tar.gz
-	$(TAR) xzvf $@.tar.gz && \
-	patch -p0 < src/disable-best-quality.patch && \
-	cd $@ && \
+dist/libsamplerate_node.js: $(SAMPLERATE_BASEDIR) src/wrapper.o src/post-node.js
+	$(EMCC) $(LINKFLAGS) --post-js src/post-node.js $(wildcard $(SAMPLERATE_BASEDIR)/src/.libs/*.o) src/wrapper.o -o $@
+
+dist/libsamplerate_browser_stubs.js: $(SAMPLERATE_BASEDIR) src/wrapper.o
+	$(EMCC) $(WEB_LINKFLAGS) $(wildcard $(SAMPLERATE_BASEDIR)/src/.libs/*.o) src/wrapper.o -o dist/libsamplerate_browser_stubs.mjs
+	mv dist/libsamplerate_browser_stubs.mjs $@
+
+dist/libsamplerate_browser.js: dist/libsamplerate_browser_stubs.js src/class.js src/browser-wrapper.js
+	rm -rf $@
+	cat src/class.js src/browser-wrapper.js > $@
+
+$(SAMPLERATE_BASEDIR): $(SAMPLERATE_TARBALL)
+	$(TAR) xf $(SAMPLERATE_TARBALL) && \
+	cd $(SAMPLERATE_BASEDIR) && \
 	$(EMCONFIGURE) ./configure --disable-fftw CFLAGS="$(CFLAGS)" && \
-	$(EMMAKE) make -C src AM_DEFAULT_VERBOSITY=1
+	$(EMMAKE) make
 
-$(SAMPLERATE).tar.gz:
-	test -e "$@" || wget $(SAMPLERATE_URL)
+$(SAMPLERATE_TARBALL):
+	rm -f $(SAMPLERATE_TARBALL)
+	wget $(SAMPLERATE_URL)
 
 clean:
-	$(RM) -rf $(SAMPLERATE)
+	$(RM) -rf $(SAMPLERATE_BASEDIR) $(SAMPLERATE_TARBALL) src/*.o src/post-node.js
 
 src/wrapper.o: src/wrapper.c
-	$(EMCC) $(CFLAGS) -I$(SAMPLERATE) -c $< -o $@
+	$(EMCC) $(CFLAGS) -I$(SAMPLERATE_BASEDIR) -c $< -o $@
 
-distclean: clean
-	$(RM) $(SAMPLERATE).tar.gz
-
-.PHONY: clean distclean
+.PHONY: clean

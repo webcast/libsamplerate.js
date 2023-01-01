@@ -1,3 +1,5 @@
 libsamplerate-*
 *.o
 .*.sw*
+src/post-node.js
+node_modules/

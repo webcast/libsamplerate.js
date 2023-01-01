@@ -1,0 +1,20 @@
+{
+  "name": "libsamplerate-js-test",
+  "description": "Test encoder for libsamplerate.js",
+  "version": "0.0.1",
+  "author": "Romain Beauxis <toots@rastageeks.org",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "format": "prettier '**/*.{ts,tsx,js,jsx}' --write",
+    "test": "ts-node ./convert.ts"
+  },
+  "dependencies": {
+    "@toots/libsamplerate.js": "link:../..",
+    "@types/node": "^18.11.18",
+    "@types/wav": "^1.0.1",
+    "prettier": "^2.8.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.4",
+    "wav": "^1.0.2"
+  }
+}

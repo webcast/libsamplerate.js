@@ -1,0 +1,28 @@
+{
+  "name": "@toots/libsamplerate.js",
+  "version": "1.0.0",
+  "description": "Javascript/wasm bindings to libsamplerate.",
+  "main": "dist/libsamplerate_node.js",
+  "browser": "dist/libsamplerate_browser.js",
+  "types": "libsamplerate.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/webcast/libsamplerate.js.git"
+  },
+  "keywords": [
+    "javascript",
+    "audio",
+    "samplerate",
+    "wasm",
+    "emscripten"
+  ],
+  "author": "Romain Beauxis <toots@rastageeks.org>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/webcast/libsamplerate.js/issues"
+  },
+  "homepage": "https://github.com/webcast/libsamplerate.js#readme"
+}
