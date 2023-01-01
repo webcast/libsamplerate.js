@@ -45,6 +45,8 @@ The encoding API should be quite straight forward:
 import { Samplerate, Converter } from "@toots/libsamplerate.js";
 
 const exec = async () => {
+  await Samplerate.initialized;
+  
   const resampler = new Samplerate(Converter.FASTEST);
 
   const result = resampler.process({
