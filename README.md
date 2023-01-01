@@ -3,33 +3,65 @@ Libsamplerate.js
 
 This repository provides a build of the samplerate conversion library in JavaScript.
 
-Conversion API
-------------
+Install
+-------
 
-```
-var resampler = new Samplerate({type: Samplerate.FASTEST});
+Using `npm`:
 
-var result = resampler.process({
-  data: buffer, // buffer is a Float32Aray or a Int16Array
-  ratio: 1.5,
-  last: false
-});
-
-var converted = result.data; // same type as buffer above
-var used = result.used; // input samples effectively used
-
-// Optional:
-converter.setRatio(2.3);
-converter.reset();
-
-// Close:
-resampler.close();
+```shell
+npm install @toots/libsamplerate.js
 ```
 
-Does it work?
--------------
+Using `yarn`:
 
-Certainly so! Check the [savonet/webcast](https://github.com/savonet/webcast) for a working implementation.
+```shell
+yarn add @toots/libsamplerate.js
+```
+
+Using `pnpm`:
+
+```shell
+pnpm install @toots/libsamplerate.js
+```
+
+In a HTML page:
+
+When using `webpack`, the package should point to the correct
+`libsamplerate_browser.js` file automatically.
+
+When using directly as a script, you can load the `libsamplerate_node.js`
+file as:
+
+```html
+<script src="libsamplerate_node.js"></script>
+```
+
+How to use?
+-----------
+
+The encoding API should be quite straight forward:
+
+```js
+import { Samplerate, Converter } from "@toots/libsamplerate.js";
+
+const exec = async () => {
+  const resampler = new Samplerate(Converter.FASTEST);
+
+  const result = resampler.process({
+    data: buffer, // buffer is a Float32Aray or a Int16Array
+    ratio: 1.5,
+    last: false
+  });
+
+  const converted = result.data; // same type as buffer above
+  const used = result.used; // input samples effectively used
+
+  // Close:
+  resampler.close();
+}
+
+exec();
+```
 
 Author
 ------
